@@ -10,6 +10,12 @@ use ApiPlatform\Metadata\ApiResource;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Attribute\Groups;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[UniqueEntity('title')]
@@ -17,6 +23,11 @@ use Symfony\Component\Serializer\Attribute\Groups;
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']]
 )]
+#[Get()]
+#[GetCollection()]
+#[Patch(security: "is_granted('ROLE_ADMIN')")]
+#[Delete(security: "is_granted('ROLE_ADMIN')")]
+#[Post(security: "is_granted('ROLE_ADMIN')")]
 class Category
 {
     #[Groups('read')]

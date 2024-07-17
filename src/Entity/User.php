@@ -22,9 +22,9 @@ use Symfony\Component\Serializer\Attribute\Groups;
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
     operations: [
-            new GetCollection(),
+            new GetCollection(security: "is_granted('ROLE_ADMIN')"),
             new Post(processor: UserPasswordHasherProcessor::class),
-            new Get(),
+            new Get(security: "is_granted('ROLE_ADMIN') or object == user"),
             new Put(processor: UserPasswordHasherProcessor::class),
             new Patch(processor: UserPasswordHasherProcessor::class),
             new Delete(),
