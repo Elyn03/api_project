@@ -48,7 +48,8 @@ use Symfony\Component\Serializer\Attribute\Groups;
                 )
             )
         )
-    ]
+    ],
+    forceEager: false
 )]
 class Media
 {
