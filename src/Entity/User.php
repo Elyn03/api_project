@@ -6,40 +6,38 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Attribute\Groups;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
 use App\State\UserPasswordHasherProcessor;
-use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(
+    operations: [
+        new GetCollection(security: "is_granted('ROLE_ADMIN')"),
+        new Post(processor: UserPasswordHasherProcessor::class),
+        new Get(security: "is_granted('ROLE_ADMIN') or object == user"),
+        new Patch(processor: UserPasswordHasherProcessor::class, security: "is_granted('ROLE_ADMIN') or object == user"),
+        new Delete(security: "is_granted('ROLE_ADMIN') or object == user"),
+    ],
+    normalizationContext: ['groups' => ['read']],
+    denormalizationContext: ['groups' => ['write']]
+)]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-#[ApiResource(
-    normalizationContext: ['groups' => ['read']],
-    denormalizationContext: ['groups' => ['write']],
-    operations: [
-            new GetCollection(security: "is_granted('ROLE_ADMIN')"),
-            new Post(processor: UserPasswordHasherProcessor::class),
-            new Get(security: "is_granted('ROLE_ADMIN') or object == user"),
-            new Put(processor: UserPasswordHasherProcessor::class),
-            new Patch(processor: UserPasswordHasherProcessor::class),
-            new Delete(),
-        ],
-)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    #[Groups('read')]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups('read')]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180)]
     #[Groups(['read', 'write'])]
+    #[ORM\Column(length: 180)]
     private ?string $email = null;
 
     /**
@@ -53,12 +51,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Groups(['read'])]
+    #[Groups('read')]
     private ?string $password = null;
 
-    #[Groups(['write'])]
+    #[Groups('write')]
     private ?string $plainPassword = null;
-
 
     #[ORM\Column(length: 255)]
     #[Groups(['read', 'write'])]
@@ -93,7 +90,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @see UserInterface
-     *
      * @return list<string>
      */
     public function getRoles(): array
@@ -126,6 +122,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword(string $plainPassword): static
+    {
+        $this->plainPassword = $plainPassword;
 
         return $this;
     }
